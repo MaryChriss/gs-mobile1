@@ -14,6 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { FontAwesome } from "@expo/vector-icons";
 import { TextInput } from "react-native-paper";
+import { Feather } from "@expo/vector-icons";
 
 export default function Perfil() {
   const [email, setEmail] = useState("");
@@ -55,9 +56,7 @@ export default function Perfil() {
   const renderItem = ({ item }: { item: string }) => (
     <View style={styles.card}>
       <View style={styles.info}>
-        <View>
-          <Text style={styles.name}>{item}</Text>
-        </View>
+        <Text style={[styles.name, { flex: 1 }]}>{item}</Text>
 
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
@@ -68,7 +67,7 @@ export default function Perfil() {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => removeFavorite(item)}>
-            <FontAwesome name="trash" size={20} color={"#e53935"} />
+            <Feather name="trash-2" size={20} color="#e53935" />
           </TouchableOpacity>
         </View>
       </View>
@@ -220,11 +219,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
+    height: 33,
+    width: 90,
   },
   buttonText: {
     color: "#fff",
     fontWeight: "600",
-    fontSize: 16,
+    fontSize: 12,
+    marginTop: -5,
   },
   emptyText: {
     textAlign: "center",
@@ -248,6 +250,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderColor: "#0000001a",
     borderWidth: 1,
+    marginBottom: 10,
   },
   buttonHome: {
     borderWidth: 1,
@@ -272,9 +275,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   info: {
-    padding: 10,
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 10,
   },
   profileContainer: {
     display: "flex",
