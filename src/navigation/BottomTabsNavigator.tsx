@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import HomeScreen from "../screens/HomeScreen";
 import Historico from "../screens/historico";
+import Perfil from "../screens/Perfil";
 
 const Tab = createBottomTabNavigator();
 
@@ -16,6 +17,8 @@ export default function BottomTabsNavigator() {
             iconName = focused ? "home" : "home-outline";
           } else if (route.name === "Historico") {
             iconName = focused ? "time" : "time-outline";
+          } else if (route.name === "Perfil") {
+            iconName = focused ? "user" : "user"
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -33,6 +36,13 @@ export default function BottomTabsNavigator() {
       <Tab.Screen
         name="Historico"
         component={Historico}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen
+        name="Perfil"
+        component={Perfil}
         options={{
           headerShown: false,
         }}
