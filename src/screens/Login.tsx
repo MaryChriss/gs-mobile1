@@ -10,6 +10,8 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const apiUrl = process.env.API_URL_BACK;
+
   useEffect(() => {
     const loadSavedData = async () => {
       const data = await AsyncStorage.getItem('userData');
@@ -24,22 +26,33 @@ export default function Login() {
 
 
 const handleLogin = async () => {
-  const data = await AsyncStorage.getItem('userData');
-  if (data) {
-    const user = JSON.parse(data);
-    if (user.email === email && user.password === password) {
-      navigation.navigate('Home');
-    } else {
-      showMessage({
-        message: "Erro",
-        description: "Email ou senha incorretos.",
-        type: "danger",
-      });
+  try {
+    const response = await fetch(`${apiUrl}/login`, {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    if(!response.ok) {
+       throw new Error("Email ou senha inválidos.");
     }
-  } else {
+
+    const data = await response.json();
+
+   await AsyncStorage.setItem('authToken', `${data.type} ${data.token}`);
+    await AsyncStorage.setItem('userEmail', data.email);
+
+  console.log("Resposta login:", data);
+
+        navigation.navigate('Home');
+    
+    navigation.navigate('Home');
+  } catch(error) {
     showMessage({
       message: "Erro",
-      description: "Nenhum usuário cadastrado.",
+      description: (error instanceof Error ? error.message : "Não foi possível fazer login."),
       type: "danger",
     });
   }

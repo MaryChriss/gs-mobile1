@@ -4,6 +4,8 @@ import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, Alert } from
 import { TextInput } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { showMessage } from "react-native-flash-message";
+import { API_URL_BACK } from '@env';
+import axios from 'axios'
 
 export default function Register() {
   const navigation = useNavigation<any>();
@@ -12,38 +14,44 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 
-  const handleRegister = async () => {
-    if (!name || !email || !password) {
-      showMessage({
-        message: "Erro", 
-        description: "Preencha todos os campos.",
-        type: "danger",
-      })
-      return;
-    }
+const apiUrl = API_URL_BACK;
 
-      if (!validateEmail(email)) {
+const handleRegister = async () => {
+  console.log("API_URL_BACK:", apiUrl);
+
+  try {
+    const response = await axios.post(`${apiUrl}/users`, {
+    nomeUser: name,
+    email,
+    password
+  });
+
+    console.log("Resposta da API:", response.data);
+
+    await AsyncStorage.setItem('userData', JSON.stringify({
+      id: response.data.idUser,
+      name: response.data.nomeUser,
+      email: response.data.email
+    }));
+
+    navigation.navigate('Login');
+    
+
+  } catch (error: any) {
+    console.log("Erro na requisição:", error?.response?.data || error.message);
+
+    const errorMsg =
+      error?.response?.data?.message || // backend customizado
+      error?.response?.data || // string direto
+      "Erro ao cadastrar.";
+
     showMessage({
       message: "Erro",
-      description: "Digite um email válido.",
+      description: errorMsg,
       type: "danger",
     });
-    return;
   }
-
-    const userData = { name, email, password };
-    await AsyncStorage.setItem('userData', JSON.stringify(userData));
-
-    showMessage({
-      message: "Sucesso",
-      description: "Cadastro realizado com sucesso.",
-      type: "success",
-    });
-    setName('');
-    setEmail('');
-    setPassword('');
-    navigation.navigate('Login');
-  };
+};
 
   return (
     <ImageBackground

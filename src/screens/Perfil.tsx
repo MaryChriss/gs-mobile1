@@ -3,26 +3,32 @@ import Header from "../../components/header/header";
 import { useCallback, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { Modal, TextInput } from "react-native";
+import axios from 'axios';
+import { API_URL_BACK } from '@env'; // se ainda não tiver importado
 
 export default function Perfil() {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
   const [favorites, setFavorites] = useState<any[]>([]);
+const [modalVisible, setModalVisible] = useState(false);
 
   const navigation = useNavigation<any>();
   const favoritos = "favorites";
 
-  useEffect(() => {
-    const loadSavedData = async () => {
-      const data = await AsyncStorage.getItem('userData');
-      if (data) {
-        const user = JSON.parse(data);
-        setEmail(user.email);
-        setName(user.name);
-      }
-    };
-    loadSavedData();
-  }, []);
+useEffect(() => {
+  const loadSavedData = async () => {
+    const data = await AsyncStorage.getItem('userData');
+    console.log('Dados do usuário:', data); 
+    if (data) {
+      const user = JSON.parse(data);
+      setEmail(user.email);
+      setName(user.nomeUser);
+    }
+  };
+  loadSavedData();
+}, []);
 
   useFocusEffect(
   useCallback(() => {
@@ -40,6 +46,35 @@ const removeFavorite = async (cidade: string) => {
   setFavorites(updated);
   await AsyncStorage.setItem(favoritos, JSON.stringify(updated));
 };
+
+const handleSaveProfile = async () => {
+  try {
+    const storedUser = await AsyncStorage.getItem('userData');
+    if (!storedUser) return;
+
+    const parsedUser = JSON.parse(storedUser);
+    const userId = parsedUser.id;
+
+    await axios.put(`${API_URL_BACK}/users/${userId}`, {
+      email: email,
+      password: password
+    });
+
+    await AsyncStorage.setItem('userData', JSON.stringify({
+      ...parsedUser,
+      nomeUser: parsedUser.nomeUser,
+      email
+    }));
+
+    console.log("Dados enviados:", { nomeUser: name, email, password });
+
+    setModalVisible(false);
+    setPassword('');
+  } catch (error) {
+    console.error("Erro ao atualizar perfil:", error);
+  }
+};
+
 
 const renderItem = ({ item }: { item: string }) => (
   <View style={styles.card}>
@@ -63,6 +98,45 @@ const renderItem = ({ item }: { item: string }) => (
   return (
     <View style={styles.container}>
       <Header />
+
+      <Modal
+  animationType="fade"
+  transparent={true}
+  visible={modalVisible}
+  onRequestClose={() => setModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContainer}>
+      <Text style={styles.modalTitle}>Editar Perfil</Text>
+
+      <TextInput
+        style={styles.input}
+        value={email}
+        onChangeText={setEmail}
+        placeholder="Email"
+      />
+
+      <TextInput
+  style={styles.input}
+  value={password}
+  onChangeText={setPassword}
+  placeholder="Senha"
+  secureTextEntry
+/>
+
+
+      <TouchableOpacity style={styles.button} onPress={handleSaveProfile}>
+        <Text style={styles.buttonText}>Salvar</Text>
+      </TouchableOpacity>
+
+
+      <TouchableOpacity style={[styles.button, { backgroundColor: '#999' }]} onPress={() => setModalVisible(false)}>
+        <Text style={styles.buttonText}>Cancelar</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
       
       <View style={styles.profileContainer}>
         <Image style={styles.image} source={require('../../assets/photo.png')} />
@@ -71,9 +145,10 @@ const renderItem = ({ item }: { item: string }) => (
             <Text style={styles.name}>{name}</Text>
             <Text style={styles.email}>{email}</Text>
 
-            <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>Editar Perfil</Text>
-            </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
+            <Text style={styles.buttonText}>Editar Perfil</Text>
+          </TouchableOpacity>
+
         </View>
       </View>
 
@@ -118,7 +193,32 @@ const styles = StyleSheet.create({
   alignItems: "center",
   marginLeft: 15,
 },
-
+modalOverlay: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: 'rgba(0,0,0,0.5)',
+},
+modalContainer: {
+  backgroundColor: '#fff',
+  padding: 20,
+  borderRadius: 10,
+  width: '80%',
+  elevation: 5,
+},
+modalTitle: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  marginBottom: 15,
+},
+input: {
+  borderWidth: 1,
+  borderColor: '#ccc',
+  borderRadius: 8,
+  padding: 10,
+  marginBottom: 10,
+  fontSize: 16,
+},
     card: {
     flexDirection: "row",
     marginBottom: 15,
