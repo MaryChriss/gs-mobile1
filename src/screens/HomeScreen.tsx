@@ -1,16 +1,24 @@
-import {Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
 import Header from "../../components/header/header";
 import { TextInput } from "react-native-paper";
-import MapView, { Marker } from 'react-native-maps';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import MapView, { Marker } from "react-native-maps";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { API_URL_BACK } from '@env';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Home() {
-    const [text, setText] = useState('');
+  const [text, setText] = useState("");
     const [dadosCidade, setDadosCidade] = useState<any | null>(null);
     const [region, setRegion] = useState({
       latitude: -8.0476,
@@ -20,94 +28,94 @@ export default function Home() {
     });
 
     const [buscouCidade, setBuscouCidade] = useState(false);
-    const mapvision = [
-  {
-    "featureType": "administrative",
-    "elementType": "geometry",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.land_parcel",
-    "elementType": "labels",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "poi",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "labels.text",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "road",
-    "elementType": "labels.icon",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "road.arterial",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "labels",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "road.local",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "road.local",
-    "elementType": "labels",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  },
-  {
-    "featureType": "transit",
-    "stylers": [
-      {
-        "visibility": "off"
-      }
-    ]
-  }
-]
+  const mapvision = [
+    {
+      featureType: "administrative",
+      elementType: "geometry",
+      stylers: [
+        {
+          visibility: "off",
+        },
+      ],
+    },
+    {
+      featureType: "administrative.land_parcel",
+      elementType: "labels",
+      stylers: [
+        {
+          visibility: "off",
+        },
+      ],
+    },
+    {
+      featureType: "poi",
+      stylers: [
+        {
+          visibility: "off",
+        },
+      ],
+    },
+    {
+      featureType: "poi",
+      elementType: "labels.text",
+      stylers: [
+        {
+          visibility: "off",
+        },
+      ],
+    },
+    {
+      featureType: "road",
+      elementType: "labels.icon",
+      stylers: [
+        {
+          visibility: "off",
+        },
+      ],
+    },
+    {
+      featureType: "road.arterial",
+      stylers: [
+        {
+          visibility: "off",
+        },
+      ],
+    },
+    {
+      featureType: "road.highway",
+      elementType: "labels",
+      stylers: [
+        {
+          visibility: "off",
+        },
+      ],
+    },
+    {
+      featureType: "road.local",
+      stylers: [
+        {
+          visibility: "off",
+        },
+      ],
+    },
+    {
+      featureType: "road.local",
+      elementType: "labels",
+      stylers: [
+        {
+          visibility: "off",
+        },
+      ],
+    },
+    {
+      featureType: "transit",
+      stylers: [
+        {
+          visibility: "off",
+        },
+      ],
+    },
+  ];
 
 const buscarCidade = async () => {
   try {
@@ -173,9 +181,9 @@ const getIconeClima = (descricao: string) => {
   }
 };
 
-    return (
-        <View style={styles.container}>
-            <Header />
+  return (
+    <View style={styles.container}>
+      <Header />
 
             <View style={styles.searchRow}>
   <TextInput
@@ -237,14 +245,14 @@ const getIconeClima = (descricao: string) => {
 }
 
 const styles = StyleSheet.create({
-filialTitle: {
-    color: '#fff',
+  filialTitle: {
+    color: "#fff",
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 150,
     marginLeft: 40,
-},
-container: {
+  },
+  container: {
     flex: 1,
 },
 searchRow: {
@@ -275,50 +283,53 @@ card: {
     backgroundColor: '#fff',
     padding: 16,
     borderRadius: 16,
-    width: '90%',
-    alignSelf: 'center',
+    width: "90%",
+    alignSelf: "center",
     marginTop: 40,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
-},
-header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: 30,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
-},
-icon: {
+  },
+  icon: {
     marginRight: 12,
-},
-city: {
+  },
+  city: {
     fontSize: 18,
-    fontWeight: '600',
-},
-condition: {
+    fontWeight: "600",
+  },
+  condition: {
     fontSize: 14,
-    color: '#555',
-},
-temp: {
+    color: "#555",
+  },
+  temp: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 6,
-},
-info: {
+  },
+  info: {
     fontSize: 14,
-    color: '#333',
-},
-map: {
-  width: '90%',
-  height: 280, 
-  alignSelf: 'center',
-  marginTop: 46,
-  overflow: 'hidden', 
-},
-search: {
-    backgroundColor: '#ABD5FF',
-    width: '100%',
+    color: "#333",
+  },
+  map: {
+    width: "90%",
+    height: 280,
+    alignSelf: "center",
+    marginTop: 26,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#fff",
+  },
+  search: {
+    backgroundColor: "#ABD5FF",
+    width: "100%",
     height: 80,
     marginTop:0,
 },

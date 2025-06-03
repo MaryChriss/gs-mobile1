@@ -1,8 +1,15 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
-import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { TextInput } from 'react-native-paper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  ImageBackground,
+  Text,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import { TextInput } from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { showMessage } from "react-native-flash-message";
 
 export default function Login() {
@@ -14,7 +21,7 @@ export default function Login() {
 
   useEffect(() => {
     const loadSavedData = async () => {
-      const data = await AsyncStorage.getItem('userData');
+      const data = await AsyncStorage.getItem("userData");
       if (data) {
         const user = JSON.parse(data);
         setEmail(user.email);
@@ -60,7 +67,7 @@ const handleLogin = async () => {
 
   return (
     <ImageBackground
-      source={require('../../assets/wppLogin.png')}
+      source={require("../../assets/wppLogin.png")}
       style={styles.background}
       resizeMode="cover"
     >
@@ -71,7 +78,8 @@ const handleLogin = async () => {
             <Text>Future Stack</Text>
           </Text>
           <Text style={styles.subtitle}>
-            Fique por dentro das condições do tempo em tempo real, ajude a proteger sua comunidade com tecnologia.
+            Fique por dentro das condições do tempo em tempo real, ajude a
+            proteger sua comunidade com tecnologia.
           </Text>
         </View>
 
@@ -79,47 +87,49 @@ const handleLogin = async () => {
           <View style={styles.loginContainer}>
             <Text style={styles.loginLabel}>Login:</Text>
             <TextInput
-                placeholder="E-mail"
-                mode="outlined"
-                value={email}
-                onChangeText={setEmail}
-                style={styles.input}
-                theme={{
-                    roundness: 15,
-                    colors: {
-                    primary: '#ff8f533e',
-                    background: '#fff',
-                    placeholder: '#999',
-                    text: '#000'
-                    }
-                }}
-                />
+              placeholder="E-mail"
+              mode="outlined"
+              value={email}
+              onChangeText={setEmail}
+              style={styles.input}
+              theme={{
+                roundness: 15,
+                colors: {
+                  primary: "#ff8f533e",
+                  background: "#fff",
+                  placeholder: "#999",
+                  text: "#000",
+                },
+              }}
+            />
 
-                <TextInput
-                placeholder="Senha"
-                mode="outlined"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-                style={styles.input}
-                theme={{
-                    roundness: 15,
-                    colors: {
-                    primary: '#ff8f533e',
-                    background: '#fff',
-                    placeholder: '#999',
-                    text: '#000'
-                    }
-                }}
-                />
-
+            <TextInput
+              placeholder="Senha"
+              mode="outlined"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              style={styles.input}
+              theme={{
+                roundness: 15,
+                colors: {
+                  primary: "#ff8f533e",
+                  background: "#fff",
+                  placeholder: "#999",
+                  text: "#000",
+                },
+              }}
+            />
           </View>
 
           <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text style={styles.buttonText}>Entrar</Text>
           </TouchableOpacity>
 
-          <Text style={styles.buttonText} onPress={() => navigation.navigate('Register')}>
+          <Text
+            style={styles.buttonText}
+            onPress={() => navigation.navigate("Register")}
+          >
             Não tem cadastro? Cadastre-se
           </Text>
         </View>
@@ -128,32 +138,31 @@ const handleLogin = async () => {
   );
 }
 
-
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    justifyContent: 'center',
-    color: '#2E9936',
+    justifyContent: "center",
+    color: "#2E9936",
   },
   container: {
     paddingHorizontal: 20,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   containerPhases: {
     marginTop: -70,
   },
   title: {
-    textAlign: 'center',
-    color: '#000000',
+    textAlign: "center",
+    color: "#000000",
     fontSize: 40,
   },
   titleHighlight: {
-    color: '#34c43d',
-    fontWeight: 'bold',
+    color: "#34c43d",
+    fontWeight: "bold",
   },
   subtitle: {
-    textAlign: 'center',
-    color: '#000000',
+    textAlign: "center",
+    color: "#000000",
     fontSize: 18,
     marginTop: 8,
   },
@@ -161,39 +170,33 @@ const styles = StyleSheet.create({
     marginTop: 100,
   },
   loginLabel: {
-    color: '#000000',
+    color: "#000000",
     fontSize: 18,
     marginBottom: 10,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
   containereverything: {
     marginBottom: -100,
   },
   input: {
-  marginBottom: 12,
-  backgroundColor: '#ffffff',
-  borderRadius: 15,
-  fontSize: 16,
-  elevation: 2,
-},
-
+    marginBottom: 12,
+  },
   button: {
-  marginTop: 20,
-  backgroundColor: '#FF8F53',
-  borderRadius: 15,
-  width: '50%',
-  paddingVertical: 10,
-  alignItems: 'center',
-  justifyContent: 'center',
-    alignSelf: 'center',
-marginBottom: 20,
-},
-buttonText: {
-  color: '#000000',
-  fontSize: 16,
-  fontWeight: 'bold',
-  textAlign: 'center',
-}
-
+    marginTop: 20,
+    backgroundColor: "#FF8F53",
+    borderRadius: 15,
+    width: "50%",
+    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: "#000000",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
 });

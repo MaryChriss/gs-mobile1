@@ -18,7 +18,7 @@ export default function BottomTabsNavigator() {
           } else if (route.name === "Historico") {
             iconName = focused ? "time" : "time-outline";
           } else if (route.name === "Perfil") {
-            iconName = focused ? "user" : "user"
+            iconName = focused ? "person" : "person";
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
