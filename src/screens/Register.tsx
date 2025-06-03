@@ -21,21 +21,20 @@ const handleRegister = async () => {
 
   try {
     const response = await axios.post(`${apiUrl}/users`, {
-    nomeUser: name,
-    email,
-    password
-  });
+      nomeUser: name,
+      email,
+      password
+    });
 
     console.log("Resposta da API:", response.data);
 
-    await AsyncStorage.setItem('userData', JSON.stringify({
-      id: response.data.idUser,
-      name: response.data.nomeUser,
-      email: response.data.email
-    }));
+    showMessage({
+      message: "Sucesso",
+      description: "Cadastro realizado com sucesso!",
+      type: "success",
+    });
 
     navigation.navigate('Login');
-    
 
   } catch (error: any) {
     console.log("Erro na requisição:", error?.response?.data || error.message);
@@ -52,6 +51,7 @@ const handleRegister = async () => {
     });
   }
 };
+
 
   return (
     <ImageBackground

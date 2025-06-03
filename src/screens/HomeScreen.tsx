@@ -16,8 +16,12 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { API_URL_BACK } from '@env';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRoute } from '@react-navigation/native';
 
 export default function Home() {
+  const route = useRoute();
+const cidadeParam = (route.params as { cidade?: string })?.cidade;
+
   const [text, setText] = useState("");
     const [dadosCidade, setDadosCidade] = useState<any | null>(null);
     const [region, setRegion] = useState({
@@ -120,28 +124,27 @@ export default function Home() {
 const buscarCidade = async () => {
   try {
 
-      const storedId = await AsyncStorage.getItem('@userId');
+      const storedData  = await AsyncStorage.getItem('userData');
 
-      if (!storedId) {
+      if (!storedData ) {
       console.log("Usuário não encontrado no AsyncStorage");
-      return;
-    }
+      return;}
 
+      const user = JSON.parse(storedData);
+      const userId = user.id;
     setBuscouCidade(true);
-
-      const idUsuario = parseInt(storedId, 10);
 
     const response = await axios.get(`${API_URL_BACK}/dados`, {
       params: {
         cidade: text,
-        idUsuario: idUsuario,
+        idUsuario: userId,
         size: 1,
         page: 0,
       },
     });
 
-    if (response.data?.content?.length > 0) {
-  const dados = response.data.content[0];
+    if (response.data?.length > 0) {
+  const dados = response.data[0];
   setDadosCidade(dados);
 
 if (dados.latApi && dados.lonApi) {
@@ -180,22 +183,66 @@ const getIconeClima = (descricao: string) => {
   }
 };
 
+React.useEffect(() => {
+  const buscarCidadeViaParam = async () => {
+    if (!cidadeParam) return;
+
+    try {
+      const storedData = await AsyncStorage.getItem('userData');
+      if (!storedData) return;
+
+      const user = JSON.parse(storedData);
+      const userId = user.id;
+
+      const response = await axios.get(`${API_URL_BACK}/dados`, {
+        params: {
+          cidade: cidadeParam,
+          idUsuario: userId,
+          size: 1,
+          page: 0,
+        },
+      });
+
+      if (response.data?.content?.length > 0) {
+        const dados = response.data.content[0];
+        setDadosCidade(dados);
+        setText(dados.cidade);
+
+        if (dados.latApi && dados.lonApi) {
+          setRegion({
+            latitude: dados.latApi,
+            longitude: dados.lonApi,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao buscar cidade via param:", error);
+    }
+  };
+
+  buscarCidadeViaParam();
+}, [cidadeParam]);
+
+
   return (
     <View style={styles.container}>
       <Header />
 
             <View style={styles.searchRow}>
-  <TextInput
-    style={styles.input}
-    value={text}
-    onChangeText={setText}
-    underlineColor="transparent"
-    mode="outlined"
-    outlineColor="#fff"
-    activeOutlineColor="#fff"
-    theme={{ colors: { text: '#000', background: '#fff' } }}
-    placeholder="Pesquisar local"
-  />
+<TextInput
+  style={styles.input}
+  value={text}
+  onChangeText={setText}
+  underlineColor="transparent"
+  mode="outlined"
+  outlineColor="#fff"
+  activeOutlineColor="#fff"
+  theme={{ colors: { text: '#000', background: '#fff' } }}
+  placeholder={cidadeParam || "Pesquisar local"}
+/>
+
   <TouchableOpacity style={styles.searchButton} onPress={buscarCidade}>
     <MaterialCommunityIcons name="magnify" size={28} color="#fff" />
   </TouchableOpacity>

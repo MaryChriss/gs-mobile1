@@ -25,7 +25,6 @@ export default function Login() {
       if (data) {
         const user = JSON.parse(data);
         setEmail(user.email);
-        setPassword(user.password);
       }
     };
     loadSavedData();
@@ -42,21 +41,24 @@ const handleLogin = async () => {
       body: JSON.stringify({ email, password })
     });
 
-    if(!response.ok) {
-       throw new Error("Email ou senha inválidos.");
+    if (!response.ok) {
+      throw new Error("Email ou senha inválidos.");
     }
 
     const data = await response.json();
+    console.log("Resposta login:", data);
 
-   await AsyncStorage.setItem('authToken', `${data.type} ${data.token}`);
-    await AsyncStorage.setItem('userEmail', data.email);
+    await AsyncStorage.setItem('userData', JSON.stringify({
+      id: data.id,
+      name: data.nome,
+      email: data.email,
+      token: data.token,
+      type: data.type
+    }));
 
-  console.log("Resposta login:", data);
-
-        navigation.navigate('Home');
-    
     navigation.navigate('Home');
-  } catch(error) {
+
+  } catch (error) {
     showMessage({
       message: "Erro",
       description: (error instanceof Error ? error.message : "Não foi possível fazer login."),
@@ -64,6 +66,7 @@ const handleLogin = async () => {
     });
   }
 };
+
 
   return (
     <ImageBackground

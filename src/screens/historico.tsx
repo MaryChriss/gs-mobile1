@@ -13,13 +13,26 @@ export default function Historico() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [historico, setHistorico] = useState<any[]>([]);
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const [dadosClimaticos, setDadosClimaticos] = useState<any[]>([]);
 
   useFocusEffect(
     useCallback(() => {
-      const fetchHistorico = async () => {
-        const userId = await AsyncStorage.getItem("@userId");
-        if (!userId) return;
 
+      const fetchDadosClimaticos = async () => {
+      try {
+        const response = await axios.get(`${API_URL_BACK}/dados`);
+        setDadosClimaticos(response.data.content || []);
+      } catch (error) {
+        console.error("Erro ao buscar dados climáticos:", error);
+      }
+    };
+
+      const fetchHistorico = async () => {
+        const userData = await AsyncStorage.getItem("userData");
+        if (!userData) return;
+
+        const user = JSON.parse(userData);
+        const userId = user.id
         try {
           const response = await axios.get(`${API_URL_BACK}/historico/${userId}`);
           setHistorico(response.data);
@@ -34,6 +47,7 @@ export default function Historico() {
       };
 
       fetchHistorico();
+      fetchDadosClimaticos();
       loadFavorites();
     }, [])
   );
@@ -45,19 +59,80 @@ export default function Historico() {
 
   const isFavorite = (cidade: string) => favorites.includes(cidade);
 
-  const toggleFavorite = async (cidade: string) => {
-    Animated.sequence([
-      Animated.timing(scaleAnim, { toValue: 1.2, duration: 100, useNativeDriver: true }),
-      Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-    ]).start();
 
-    const updated = isFavorite(cidade)
-      ? favorites.filter((item) => item !== cidade)
-      : [...favorites, cidade];
+const toggleFavorite = async (item: any) => {
+  Animated.sequence([
+    Animated.timing(scaleAnim, { toValue: 1.2, duration: 100, useNativeDriver: true }),
+    Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+  ]).start();
 
+  const userData = await AsyncStorage.getItem("userData");
+  if (!userData) return;
+  const user = JSON.parse(userData);
+
+  // Já é favorito? Apenas remove localmente
+  if (isFavorite(item.cidade)) {
+    const updated = favorites.filter((fav) => fav !== item.cidade);
     setFavorites(updated);
     await AsyncStorage.setItem("favorites", JSON.stringify(updated));
+    return;
+  }
+
+  // POST para o backend
+  try {
+    console.log("Item enviado:", item);
+
+let latApi = item.latApi;
+let lonApi = item.lonApi;
+
+// Fallback se vier undefined do histórico
+if (!latApi || !lonApi) {
+  const coords = getLatLonByCidade(item.cidade);
+  latApi = coords.latApi;
+  lonApi = coords.lonApi;
+}
+
+
+if (!latApi || !lonApi) {
+  console.warn("Dados de localização ausentes para:", item.cidade);
+  alert("Não foi possível favoritar esta cidade. Dados de localização incompletos.");
+  return;
+}
+
+await axios.post(`${API_URL_BACK}/favoritos`, {
+  idUsuario: user.id,
+  cidade: item.cidade,
+  latApi,
+  lonApi,
+});
+
+
+
+    const updated = [...favorites, item.cidade];
+    setFavorites(updated);
+    await AsyncStorage.setItem("favorites", JSON.stringify(updated));
+  } catch (error: any) {
+    if (error.response?.status === 409) {
+      console.log("Cidade já favoritada.");
+    } else {
+      console.error("Erro ao favoritar cidade:", error);
+    }
+  }
+};
+
+const normalize = (str: string) =>
+  str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+const getLatLonByCidade = (cidade: string) => {
+  const cidadeNormalizada = normalize(cidade);
+  const dado = dadosClimaticos.find(
+    (d) => normalize(d.cidade) === cidadeNormalizada
+  );
+  return {
+    latApi: dado?.latApi || null,
+    lonApi: dado?.lonApi || null,
   };
+};
 
   return (
     <View style={styles.container}>
@@ -100,7 +175,7 @@ export default function Historico() {
                 })}
               </Text>
             </View>
-            <TouchableOpacity onPress={() => toggleFavorite(item.cidade)}>
+            <TouchableOpacity onPress={() => toggleFavorite(item)}>
               <Animated.View style={[styles.heartButton, { transform: [{ scale: scaleAnim }] }]}>
                 <FontAwesome
                   name="heart"

@@ -35,7 +35,7 @@ useEffect(() => {
     if (data) {
       const user = JSON.parse(data);
       setEmail(user.email);
-      setName(user.nomeUser);
+      setName(user.name);
     }
   };
   loadSavedData();
@@ -52,10 +52,15 @@ useEffect(() => {
     }, [])
   );
 
-const removeFavorite = async (cidade: string) => {
-  const updated = favorites.filter((c) => c !== cidade);
-  setFavorites(updated);
-  await AsyncStorage.setItem(favoritos, JSON.stringify(updated));
+const removeFavorite = async (id: number) => {
+  try {
+    await axios.delete(`${API_URL_BACK}/favoritos/${id}`);
+    const updated = favorites.filter((fav) => fav.id !== id);
+    setFavorites(updated);
+    await AsyncStorage.setItem("favorites", JSON.stringify(updated));
+  } catch (error) {
+    console.error("Erro ao remover favorito:", error);
+  }
 };
 
 const handleSaveProfile = async () => {
@@ -67,9 +72,15 @@ const handleSaveProfile = async () => {
     const userId = parsedUser.id;
 
     await axios.put(`${API_URL_BACK}/users/${userId}`, {
-      email: email,
-      password: password
-    });
+  nomeUser: name,
+  email,
+  password
+}, {
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
 
     await AsyncStorage.setItem('userData', JSON.stringify({
       ...parsedUser,
@@ -86,68 +97,70 @@ const handleSaveProfile = async () => {
   }
 };
 
+const deleteFavorite = async () => {
 
-  const renderItem = ({ item }: { item: string }) => (
-    <View style={styles.card}>
-      <View style={styles.info}>
-        <Text style={[styles.name, { flex: 1 }]}>{item}</Text>
+}
 
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity
-            style={styles.buttonHome}
-            onPress={() => navigation.navigate("Home")}
-          >
-            <Text style={styles.buttonHomeText}>Ver</Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => removeFavorite(item)}>
-            <Feather name="trash-2" size={20} color="#e53935" />
-          </TouchableOpacity>
-        </View>
+const renderItem = ({ item }: { item: { id: number; cidade: string } }) => (
+  <View style={styles.cleanCard}>
+    <View style={styles.cardRow}>
+      <Text style={styles.cardCity}>{item.cidade}</Text>
+
+      <View style={styles.cardActions}>
+        <TouchableOpacity onPress={() => navigation.navigate("Home", { cidade: item.cidade })}>
+          <Feather name="map-pin" size={18} color="#555" style={styles.cardIcon} />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => removeFavorite(item.id)}>
+          <Feather name="trash-2" size={18} color="#e53935" style={styles.cardIcon} />
+        </TouchableOpacity>
       </View>
     </View>
-  );
+  </View>
+);
 
   return (
     <View style={styles.container}>
       <Header />
 
       <Modal
-  animationType="fade"
-  transparent={true}
-  visible={modalVisible}
-  onRequestClose={() => setModalVisible(false)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContainer}>
-      <Text style={styles.modalTitle}>Editar Perfil</Text>
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Editar Perfil</Text>
 
-      <TextInput
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Email"
-      />
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email"
+            />
 
-      <TextInput
-  style={styles.input}
-  value={password}
-  onChangeText={setPassword}
-  placeholder="Senha"
-  secureTextEntry
-/>
+            <TextInput
+              style={styles.input}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Senha"
+              secureTextEntry
+            />
+
+            <View style={styles.buttonModal}>
+            <TouchableOpacity style={styles.button} onPress={handleSaveProfile}>
+              <Text style={styles.buttonText}>Salvar</Text>
+            </TouchableOpacity>
 
 
-      <TouchableOpacity style={styles.button} onPress={handleSaveProfile}>
-        <Text style={styles.buttonText}>Salvar</Text>
-      </TouchableOpacity>
-
-
-      <TouchableOpacity style={[styles.button, { backgroundColor: '#999' }]} onPress={() => setModalVisible(false)}>
-        <Text style={styles.buttonText}>Cancelar</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
+            <TouchableOpacity style={[styles.button, { backgroundColor: '#999' }]} onPress={() => setModalVisible(false)}>
+              <Text style={styles.buttonText}>Cancelar</Text>
+            </TouchableOpacity>
+            </View>
+          </View>
+        </View>
 </Modal>
 
       
@@ -160,70 +173,8 @@ const handleSaveProfile = async () => {
         <View style={styles.infosContainer}>
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.email}>{email}</Text>
-
-          <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
-            <Text style={styles.buttonText}>Editar Perfil</Text>
-          </TouchableOpacity>
-
         </View>
       </View>
-
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Editar perfil</Text>
-            <Text style={styles.modalSubtitle}>
-              Altere seu nome ou e-mail quando quiser.
-            </Text>
-
-            <TextInput
-              placeholder="Nome"
-              mode="outlined"
-              value={name}
-              onChangeText={setName}
-              style={styles.input}
-              theme={{
-                roundness: 12,
-                colors: {
-                  primary: "#FF8F53",
-                  background: "#fff",
-                  placeholder: "#aaa",
-                  text: "#000",
-                },
-              }}
-            />
-
-            <TextInput
-              placeholder="E-mail"
-              mode="outlined"
-              value={email}
-              onChangeText={setEmail}
-              style={styles.input}
-              theme={{
-                roundness: 12,
-                colors: {
-                  primary: "#FF8F53",
-                  background: "#fff",
-                  placeholder: "#aaa",
-                  text: "#000",
-                },
-              }}
-            />
-
-            <Pressable
-              style={styles.button}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.buttonText}>Fechar</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
 
       <View style={{ display: "flex", padding: 10 }}>
         <Text style={styles.title}>Cidades favoritas:</Text>
@@ -232,12 +183,25 @@ const handleSaveProfile = async () => {
           <Text style={styles.emptyText}>Nenhuma cidade salva.</Text>
         ) : (
           <FlatList
-            data={favorites}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={renderItem}
-          />
+          data={favorites.slice(0, 4)}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={renderItem}
+        />
         )}
       </View>
+
+      <View style={styles.menuContainer}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => setModalVisible(true)}>
+          <Feather name="user" size={20} color="#555" style={styles.menuIcon} />
+          <Text style={styles.menuText}>Editar Perfil</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.menuItem} onPress={() => console.log("Deletar Conta")}>
+          <Feather  name="trash-2" size={20} color="#da0707" style={styles.menuIcon} />
+          <Text style={styles.menuText}>Deletar Conta</Text>
+        </TouchableOpacity>
+      </View>
+
     </View>
   );
 }
@@ -247,6 +211,33 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "column",
   },
+  buttonModal: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 20
+  },menuContainer: {
+  marginTop: 30,
+  paddingHorizontal: 25,
+},
+
+menuItem: {
+  flexDirection: "row",
+  alignItems: "center",
+  paddingVertical: 15,
+  borderBottomWidth: 1,
+  borderBottomColor: "#ddd",
+},
+
+menuIcon: {
+  marginRight: 15,
+},
+
+menuText: {
+  fontSize: 16,
+  color: "#333",
+},
+
   title: {
     fontSize: 18,
     fontWeight: "bold",
@@ -303,7 +294,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 18,
     color: "#888",
-    marginTop: 150,
+    marginTop: 10,
   },
   buttonsContainer: {
     flexDirection: "row",
@@ -333,6 +324,41 @@ const styles = StyleSheet.create({
     backgroundColor: "#f2f2f2",
     marginRight: 5,
   },
+cleanCard: {
+  backgroundColor: "#fff",
+  borderRadius: 12,
+  paddingVertical: 15,
+  paddingHorizontal: 20,
+  marginBottom: 12,
+  borderWidth: 0,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.05,
+  shadowRadius: 4,
+  elevation: 1, 
+},
+
+cardRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
+
+cardCity: {
+  fontSize: 16,
+  color: "#333",
+  fontWeight: "500",
+  flexShrink: 1,
+},
+
+cardActions: {
+  flexDirection: "row",
+  gap: 15,
+},
+
+cardIcon: {
+  padding: 4,
+},
 
   buttonHomeText: {
     textAlign: "center",
