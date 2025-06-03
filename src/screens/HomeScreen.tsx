@@ -1,13 +1,4 @@
-import {
-  FlatList,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import React, { useState } from "react";
 import Header from "../../components/header/header";
 import { TextInput } from "react-native-paper";
@@ -20,18 +11,18 @@ import { useRoute } from '@react-navigation/native';
 
 export default function Home() {
   const route = useRoute();
-const cidadeParam = (route.params as { cidade?: string })?.cidade;
+  const cidadeParam = (route.params as { cidade?: string })?.cidade;
 
   const [text, setText] = useState("");
-    const [dadosCidade, setDadosCidade] = useState<any | null>(null);
-    const [region, setRegion] = useState({
-      latitude: -8.0476,
-      longitude: -34.8770,
-      latitudeDelta: 0.05,
-      longitudeDelta: 0.05,
-    });
-
-    const [buscouCidade, setBuscouCidade] = useState(false);
+  const [placeholder, setPlaceholder] = useState(cidadeParam || "Pesquisar local");
+  const [dadosCidade, setDadosCidade] = useState<any | null>(null);
+  const [region, setRegion] = useState({
+    latitude: -8.0476,
+    longitude: -34.8770,
+    latitudeDelta: 0.05,
+    longitudeDelta: 0.05,
+  });
+  const [buscouCidade, setBuscouCidade] = useState(false);
   const mapvision = [
     {
       featureType: "administrative",
@@ -121,18 +112,20 @@ const cidadeParam = (route.params as { cidade?: string })?.cidade;
     },
   ];
 
-const buscarCidade = async () => {
+  const buscarCidade = async () => {
   try {
-
-      const storedData  = await AsyncStorage.getItem('userData');
-
-      if (!storedData ) {
+    const storedData = await AsyncStorage.getItem('userData');
+    if (!storedData) {
       console.log("Usuário não encontrado no AsyncStorage");
-      return;}
+      return;
+    }
 
-      const user = JSON.parse(storedData);
-      const userId = user.id;
     setBuscouCidade(true);
+    setPlaceholder("Pesquisar local");
+    setDadosCidade(null);
+
+    const user = JSON.parse(storedData);
+    const userId = user.id;
 
     const response = await axios.get(`${API_URL_BACK}/dados`, {
       params: {
@@ -144,21 +137,21 @@ const buscarCidade = async () => {
     });
 
     if (response.data?.length > 0) {
-  const dados = response.data[0];
-  setDadosCidade(dados);
+      const dados = response.data[0];
+      setDadosCidade(dados);
 
-if (dados.latApi && dados.lonApi) {
-  console.log("Atualizando região para:", dados.latApi, dados.lonApi);
-  setRegion({
-    latitude: dados.latApi,
-    longitude: dados.lonApi,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
-  });
-} else {
-  console.warn("Lat/Lon não encontrados em dados:", dados);
-}
-  }
+      if (dados.latApi && dados.lonApi) {
+        console.log("Atualizando região para:", dados.latApi, dados.lonApi);
+        setRegion({
+          latitude: dados.latApi,
+          longitude: dados.lonApi,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        });
+      } else {
+        console.warn("Lat/Lon não encontrados em dados:", dados);
+      }
+    }
   } catch (error) {
     console.log("Erro ao buscar cidade:", error);
     setDadosCidade(null);
@@ -203,8 +196,9 @@ React.useEffect(() => {
         },
       });
 
-      if (response.data?.content?.length > 0) {
-        const dados = response.data.content[0];
+    if (response.data?.length > 0) {
+    const dados = response.data[0];
+
         setDadosCidade(dados);
         setText(dados.cidade);
 
@@ -231,37 +225,37 @@ React.useEffect(() => {
       <Header />
 
             <View style={styles.searchRow}>
-<TextInput
-  style={styles.input}
-  value={text}
-  onChangeText={setText}
-  underlineColor="transparent"
-  mode="outlined"
-  outlineColor="#fff"
-  activeOutlineColor="#fff"
-  theme={{ colors: { text: '#000', background: '#fff' } }}
-  placeholder={cidadeParam || "Pesquisar local"}
-/>
+            <TextInput
+              style={styles.input}
+              value={text}
+              onChangeText={setText}
+              underlineColor="transparent"
+              mode="outlined"
+              outlineColor="#fff"
+              activeOutlineColor="#fff"
+              theme={{ colors: { text: '#000', background: '#fff' } }}
+              placeholder={placeholder}
+            />
 
-  <TouchableOpacity style={styles.searchButton} onPress={buscarCidade}>
-    <MaterialCommunityIcons name="magnify" size={28} color="#fff" />
-  </TouchableOpacity>
-</View>
+              <TouchableOpacity style={styles.searchButton} onPress={buscarCidade}>
+                <MaterialCommunityIcons name="magnify" size={28} color="#fff" />
+              </TouchableOpacity>
+            </View>
 
             <MapView
               style={styles.map}
-              region={region} // aqui!
+              region={region}
               customMapStyle={mapvision}
             >
               <Marker coordinate={{ latitude: region.latitude, longitude: region.longitude }} />
             </MapView>
 
             {buscouCidade && !dadosCidade && (
-  <Text style={styles.mensagemNaoEncontrado}>
-  😕 Cidade não encontrada. Tente outra busca!
-</Text>
+              <Text style={styles.mensagemNaoEncontrado}>
+              😕 Cidade não encontrada. Tente outra busca!
+            </Text>
 
-)}
+            )}
 
 
           {dadosCidade && (
@@ -284,8 +278,6 @@ React.useEffect(() => {
             <Text style={styles.info}>Vento: {dadosCidade.ventoVelocidade}</Text>
           </View>
         )}
-
-
         </View>
     );
 }

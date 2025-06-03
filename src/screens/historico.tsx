@@ -14,6 +14,22 @@ export default function Historico() {
   const [historico, setHistorico] = useState<any[]>([]);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const [dadosClimaticos, setDadosClimaticos] = useState<any[]>([]);
+  const [favoritosBack, setFavoritosBack] = useState<Favorito[]>([]);
+
+  const isFavorite = (cidade: string) => favorites.includes(cidade);
+
+  const normalize = (str: string) =>
+  str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  const historicoUnico = historico.filter(
+  (item, index, self) =>
+    index === self.findIndex((t) => t.cidade === item.cidade)
+  );
+
+  type Favorito = {
+  id: number;
+  cidade: string;
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -42,75 +58,103 @@ export default function Historico() {
       };
 
       const loadFavorites = async () => {
-        const favs = await AsyncStorage.getItem("favorites");
-        setFavorites(favs ? JSON.parse(favs) : []);
-      };
+      const userData = await AsyncStorage.getItem("userData");
+      if (!userData) return;
+      const user = JSON.parse(userData);
+
+      try {
+        const response = await axios.get(`${API_URL_BACK}/favoritos/${user.id}`);
+        const favoritosCompletos = response.data.map((fav: any) => ({
+          id: fav.idFavorito,
+          cidade: fav.cidade,
+        }));
+
+      setFavoritosBack(favoritosCompletos);
+
+      setFavorites(favoritosCompletos);
+      await AsyncStorage.setItem("favorites", JSON.stringify(favoritosCompletos));
+
+    } catch (error) {
+      console.error("Erro ao carregar favoritos do backend:", error);
+    }
+  };
 
       fetchHistorico();
       fetchDadosClimaticos();
       loadFavorites();
-    }, [])
-  );
-
-  const historicoUnico = historico.filter(
-  (item, index, self) =>
-    index === self.findIndex((t) => t.cidade === item.cidade)
-);
-
-  const isFavorite = (cidade: string) => favorites.includes(cidade);
+      }, [])
+    );
 
 
-const toggleFavorite = async (item: any) => {
-  Animated.sequence([
-    Animated.timing(scaleAnim, { toValue: 1.2, duration: 100, useNativeDriver: true }),
-    Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-  ]).start();
+  const toggleFavorite = async (item: any) => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 1.2, duration: 100, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+    ]).start();
 
   const userData = await AsyncStorage.getItem("userData");
   if (!userData) return;
   const user = JSON.parse(userData);
 
-  // Já é favorito? Apenas remove localmente
-  if (isFavorite(item.cidade)) {
-    const updated = favorites.filter((fav) => fav !== item.cidade);
-    setFavorites(updated);
-    await AsyncStorage.setItem("favorites", JSON.stringify(updated));
+  const jaEhFavorito = isFavorite(item.cidade);
+  if (jaEhFavorito) {
+    const favorito = favoritosBack.find(
+      (f) => normalize(f.cidade) === normalize(item.cidade)
+  );
+
+  if (!favorito) {
+    console.warn("⚠️ Favorito não encontrado para cidade:", item.cidade);
+    console.log("Favoritos disponíveis:", favoritosBack);
     return;
   }
 
-  // POST para o backend
   try {
-    console.log("Item enviado:", item);
+    console.log("🗑️ Enviando DELETE para:", `${API_URL_BACK}/favoritos/${favorito.id}`);
+    await axios.delete(`${API_URL_BACK}/favoritos/${favorito.id}`);
 
-let latApi = item.latApi;
-let lonApi = item.lonApi;
+    const updated = favorites.filter((fav) => fav !== item.cidade);
+    setFavorites(updated);
+    setFavoritosBack(favoritosBack.filter((f) => f.id !== favorito.id));
+    await AsyncStorage.setItem("favorites", JSON.stringify(updated));
+  } catch (error) {
+    console.error("Erro ao remover favorito:", error);
+  }
 
-// Fallback se vier undefined do histórico
-if (!latApi || !lonApi) {
-  const coords = getLatLonByCidade(item.cidade);
-  latApi = coords.latApi;
-  lonApi = coords.lonApi;
-}
-
-
-if (!latApi || !lonApi) {
-  console.warn("Dados de localização ausentes para:", item.cidade);
-  alert("Não foi possível favoritar esta cidade. Dados de localização incompletos.");
   return;
 }
 
-await axios.post(`${API_URL_BACK}/favoritos`, {
-  idUsuario: user.id,
-  cidade: item.cidade,
-  latApi,
-  lonApi,
-});
+  // Caso não seja favorito, adiciona
+  try {
+    let latApi = item.latApi;
+    let lonApi = item.lonApi;
 
+    if (!latApi || !lonApi) {
+      const coords = getLatLonByCidade(item.cidade);
+      latApi = coords.latApi;
+      lonApi = coords.lonApi;
+    }
 
+    if (!latApi || !lonApi) {
+      alert("Não foi possível favoritar esta cidade. Dados de localização incompletos.");
+      return;
+    }
 
-    const updated = [...favorites, item.cidade];
-    setFavorites(updated);
-    await AsyncStorage.setItem("favorites", JSON.stringify(updated));
+    const response = await axios.post(`${API_URL_BACK}/favoritos`, {
+      idUsuario: user.id,
+      cidade: item.cidade,
+      latApi,
+      lonApi,
+    });
+
+const novoFavorito = {
+  id: response.data.idFavorito,
+  cidade: response.data.cidade,
+};
+
+const atualizados = [...favoritosBack, novoFavorito];
+setFavorites(atualizados.map(f => f.cidade)); // ou setFavorites(atualizados.map(f => f.cidade))
+setFavoritosBack(atualizados);
+await AsyncStorage.setItem("favorites", JSON.stringify(atualizados));
   } catch (error: any) {
     if (error.response?.status === 409) {
       console.log("Cidade já favoritada.");
@@ -119,9 +163,6 @@ await axios.post(`${API_URL_BACK}/favoritos`, {
     }
   }
 };
-
-const normalize = (str: string) =>
-  str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 const getLatLonByCidade = (cidade: string) => {
   const cidadeNormalizada = normalize(cidade);

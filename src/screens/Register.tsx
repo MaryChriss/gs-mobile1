@@ -12,9 +12,7 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
-  const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
-
-const apiUrl = API_URL_BACK;
+  const apiUrl = API_URL_BACK;
 
 const handleRegister = async () => {
   console.log("API_URL_BACK:", apiUrl);
@@ -40,8 +38,8 @@ const handleRegister = async () => {
     console.log("Erro na requisição:", error?.response?.data || error.message);
 
     const errorMsg =
-      error?.response?.data?.message || // backend customizado
-      error?.response?.data || // string direto
+      error?.response?.data?.message || 
+      error?.response?.data ||
       "Erro ao cadastrar.";
 
     showMessage({

@@ -1,13 +1,4 @@
-import {
-  Image,
-  Text,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  Modal,
-  Pressable,
-} from "react-native";
+import { Image, Text, View, StyleSheet, TouchableOpacity, FlatList, Modal,} from "react-native";
 import Header from "../../components/header/header";
 import { useCallback, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -22,46 +13,50 @@ export default function Perfil() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState('');
-  const [favorites, setFavorites] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<{ id: number, cidade: string }[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
 
   const navigation = useNavigation<any>();
   const favoritos = "favorites";
 
-useEffect(() => {
-  const loadSavedData = async () => {
-    const data = await AsyncStorage.getItem('userData');
-    console.log('Dados do usuário:', data); 
-    if (data) {
-      const user = JSON.parse(data);
-      setEmail(user.email);
-      setName(user.name);
-    }
-  };
-  loadSavedData();
-}, []);
+  useEffect(() => {
+    const loadSavedData = async () => {
+      const data = await AsyncStorage.getItem('userData');
+      console.log('Dados do usuário:', data); 
+      if (data) {
+        const user = JSON.parse(data);
+        setEmail(user.email);
+        setName(user.name);
+      }
+    };
+    loadSavedData();
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       const loadFavorites = async () => {
         const favs = await AsyncStorage.getItem(favoritos);
-        setFavorites(favs ? JSON.parse(favs) : []);
+        if (favs) {
+          const parsedFavs = JSON.parse(favs);
+          setFavorites(parsedFavs);
+        } else {
+          setFavorites([]);
+        }
       };
-
       loadFavorites();
     }, [])
   );
 
-const removeFavorite = async (id: number) => {
-  try {
-    await axios.delete(`${API_URL_BACK}/favoritos/${id}`);
-    const updated = favorites.filter((fav) => fav.id !== id);
-    setFavorites(updated);
-    await AsyncStorage.setItem("favorites", JSON.stringify(updated));
-  } catch (error) {
-    console.error("Erro ao remover favorito:", error);
-  }
-};
+  const removeFavorite = async (id: number) => {
+    try {
+      await axios.delete(`${API_URL_BACK}/favoritos/${id}`);
+      const updated = favorites.filter((fav) => fav.id !== id);
+      setFavorites(updated);
+      await AsyncStorage.setItem("favorites", JSON.stringify(updated));
+    } catch (error) {
+      console.error("Erro ao remover favorito:", error);
+    }
+  };
 
 const handleSaveProfile = async () => {
   try {
@@ -72,23 +67,23 @@ const handleSaveProfile = async () => {
     const userId = parsedUser.id;
 
     await axios.put(`${API_URL_BACK}/users/${userId}`, {
-  nomeUser: name,
-  email,
-  password
-}, {
-  headers: {
-    'Content-Type': 'application/json',
-  }
-});
+    nomeUser: name,
+    email,
+    password
+  }, {
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  });
 
 
-    await AsyncStorage.setItem('userData', JSON.stringify({
-      ...parsedUser,
-      nomeUser: parsedUser.nomeUser,
-      email
-    }));
+  await AsyncStorage.setItem('userData', JSON.stringify({
+    ...parsedUser,
+    nomeUser: name,
+    email
+  }));
 
-    console.log("Dados enviados:", { nomeUser: name, email, password });
+  console.log("Dados enviados:", { nomeUser: name, email });
 
     setModalVisible(false);
     setPassword('');
@@ -97,9 +92,20 @@ const handleSaveProfile = async () => {
   }
 };
 
-const deleteFavorite = async () => {
+const deleteUser = async () => {
+  const storedUser = await AsyncStorage.getItem('userData');
+  if (!storedUser) return;
 
-}
+  const user = JSON.parse(storedUser);
+  try {
+    await axios.delete(`${API_URL_BACK}/users/${user.id}`);
+    await AsyncStorage.clear();
+    navigation.navigate("Login");
+  } catch (error) {
+    console.error("Erro ao deletar conta:", error);
+  }
+};
+
 
 
 const renderItem = ({ item }: { item: { id: number; cidade: string } }) => (
@@ -161,8 +167,7 @@ const renderItem = ({ item }: { item: { id: number; cidade: string } }) => (
             </View>
           </View>
         </View>
-</Modal>
-
+      </Modal>
       
       <View style={styles.profileContainer}>
         <Image
@@ -196,7 +201,7 @@ const renderItem = ({ item }: { item: { id: number; cidade: string } }) => (
           <Text style={styles.menuText}>Editar Perfil</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem} onPress={() => console.log("Deletar Conta")}>
+        <TouchableOpacity style={styles.menuItem} onPress={deleteUser}>
           <Feather  name="trash-2" size={20} color="#da0707" style={styles.menuIcon} />
           <Text style={styles.menuText}>Deletar Conta</Text>
         </TouchableOpacity>

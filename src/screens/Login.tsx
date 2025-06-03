@@ -1,13 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
-import {
-  ImageBackground,
-  Text,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
+import { ImageBackground, Text, View, StyleSheet, TouchableOpacity, } from "react-native";
 import { TextInput } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { showMessage } from "react-native-flash-message";
@@ -66,7 +59,6 @@ const handleLogin = async () => {
     });
   }
 };
-
 
   return (
     <ImageBackground
