@@ -16,7 +16,9 @@ export default function Historico() {
   const [dadosClimaticos, setDadosClimaticos] = useState<any[]>([]);
   const [favoritosBack, setFavoritosBack] = useState<Favorito[]>([]);
 
-  const isFavorite = (cidade: string) => favorites.includes(cidade);
+  const isFavorite = (cidade: string) => {
+    return favorites.includes(cidade);
+  } 
 
   const normalize = (str: string) =>
   str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -71,8 +73,9 @@ export default function Historico() {
 
       setFavoritosBack(favoritosCompletos);
 
-      setFavorites(favoritosCompletos);
-      await AsyncStorage.setItem("favorites", JSON.stringify(favoritosCompletos));
+      const favoritosStrings = favoritosCompletos.map((f: Favorito) => f.cidade);
+      setFavorites(favoritosStrings);
+      await AsyncStorage.setItem("favorites", JSON.stringify(favoritosStrings));
 
     } catch (error) {
       console.error("Erro ao carregar favoritos do backend:", error);
@@ -86,11 +89,11 @@ export default function Historico() {
     );
 
 
-  const toggleFavorite = async (item: any) => {
-    Animated.sequence([
-      Animated.timing(scaleAnim, { toValue: 1.2, duration: 100, useNativeDriver: true }),
-      Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-    ]).start();
+const toggleFavorite = async (item: any) => {
+  Animated.sequence([
+    Animated.timing(scaleAnim, { toValue: 1.2, duration: 100, useNativeDriver: true }),
+    Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+  ]).start();
 
   const userData = await AsyncStorage.getItem("userData");
   if (!userData) return;
@@ -98,68 +101,62 @@ export default function Historico() {
 
   const jaEhFavorito = isFavorite(item.cidade);
   if (jaEhFavorito) {
-    const favorito = favoritosBack.find(
-      (f) => normalize(f.cidade) === normalize(item.cidade)
-  );
+    // Remover do favorito
+    const favorito = favoritosBack.find((f) => normalize(f.cidade) === normalize(item.cidade));
 
-  if (!favorito) {
-    console.warn("⚠️ Favorito não encontrado para cidade:", item.cidade);
-    console.log("Favoritos disponíveis:", favoritosBack);
-    return;
-  }
-
-  try {
-    console.log("🗑️ Enviando DELETE para:", `${API_URL_BACK}/favoritos/${favorito.id}`);
-    await axios.delete(`${API_URL_BACK}/favoritos/${favorito.id}`);
-
-    const updated = favorites.filter((fav) => fav !== item.cidade);
-    setFavorites(updated);
-    setFavoritosBack(favoritosBack.filter((f) => f.id !== favorito.id));
-    await AsyncStorage.setItem("favorites", JSON.stringify(updated));
-  } catch (error) {
-    console.error("Erro ao remover favorito:", error);
-  }
-
-  return;
-}
-
-  // Caso não seja favorito, adiciona
-  try {
-    let latApi = item.latApi;
-    let lonApi = item.lonApi;
-
-    if (!latApi || !lonApi) {
-      const coords = getLatLonByCidade(item.cidade);
-      latApi = coords.latApi;
-      lonApi = coords.lonApi;
-    }
-
-    if (!latApi || !lonApi) {
-      alert("Não foi possível favoritar esta cidade. Dados de localização incompletos.");
+    if (!favorito) {
+      console.warn("⚠️ Favorito não encontrado para cidade:", item.cidade);
       return;
     }
 
-    const response = await axios.post(`${API_URL_BACK}/favoritos`, {
-      idUsuario: user.id,
-      cidade: item.cidade,
-      latApi,
-      lonApi,
-    });
+    try {
+      await axios.delete(`${API_URL_BACK}/favoritos/${favorito.id}`);
+      const updated = favorites.filter((fav) => fav !== item.cidade);
+      setFavorites(updated); // Atualiza o estado de favoritos
+      setFavoritosBack(favoritosBack.filter((f) => f.id !== favorito.id)); // Atualiza o estado completo de favoritos
+      await AsyncStorage.setItem("favorites", JSON.stringify(updated)); // Salva no AsyncStorage
+    } catch (error) {
+      console.error("Erro ao remover favorito:", error);
+    }
+  } else {
+    // Adicionar ao favorito
+    try {
+      let latApi = item.latApi;
+      let lonApi = item.lonApi;
 
-const novoFavorito = {
-  id: response.data.idFavorito,
-  cidade: response.data.cidade,
-};
+      if (!latApi || !lonApi) {
+        const coords = getLatLonByCidade(item.cidade);
+        latApi = coords.latApi;
+        lonApi = coords.lonApi;
+      }
 
-const atualizados = [...favoritosBack, novoFavorito];
-setFavorites(atualizados.map(f => f.cidade)); // ou setFavorites(atualizados.map(f => f.cidade))
-setFavoritosBack(atualizados);
-await AsyncStorage.setItem("favorites", JSON.stringify(atualizados));
-  } catch (error: any) {
-    if (error.response?.status === 409) {
-      console.log("Cidade já favoritada.");
-    } else {
-      console.error("Erro ao favoritar cidade:", error);
+      if (!latApi || !lonApi) {
+        alert("Não foi possível favoritar esta cidade. Dados de localização incompletos.");
+        return;
+      }
+
+      const response = await axios.post(`${API_URL_BACK}/favoritos`, {
+        idUsuario: user.id,
+        cidade: item.cidade,
+        latApi,
+        lonApi,
+      });
+
+      const novoFavorito = {
+        id: response.data.idFavorito,
+        cidade: response.data.cidade,
+      };
+
+      const atualizados = [...favoritosBack, novoFavorito];
+      setFavorites(atualizados.map(f => f.cidade)); // Atualiza os favoritos no estado
+      setFavoritosBack(atualizados); // Atualiza o estado completo de favoritos
+      await AsyncStorage.setItem("favorites", JSON.stringify(atualizados)); // Salva no AsyncStorage
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        console.log("Cidade já favoritada.");
+      } else {
+        console.error("Erro ao favoritar cidade:", error);
+      }
     }
   }
 };
@@ -201,33 +198,34 @@ const getLatLonByCidade = (cidade: string) => {
         </View>
       </Modal>
 
-      <FlatList
-        data={historicoUnico}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View>
-              <Text style={{ fontWeight: "bold" }}>{item.cidade}</Text>
-              <Text style={{ color: "#888" }}>
-                {new Date(item.dataPesquisa).toLocaleString("pt-BR", {
-                  day: "2-digit", month: "2-digit", year: "numeric",
-                  hour: "2-digit", minute: "2-digit"
-                })}
-              </Text>
-            </View>
-            <TouchableOpacity onPress={() => toggleFavorite(item)}>
-              <Animated.View style={[styles.heartButton, { transform: [{ scale: scaleAnim }] }]}>
-                <FontAwesome
-                  name="heart"
-                  size={20}
-                  color={isFavorite(item.cidade) ? "#e53935" : "#ccc"}
-                />
-              </Animated.View>
-            </TouchableOpacity>
-          </View>
-        )}
-      />
+<FlatList
+  data={historicoUnico}
+  keyExtractor={(item) => item.id.toString()}
+  contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+  renderItem={({ item }) => (
+    <View style={styles.card}>
+      <View>
+        <Text style={{ fontWeight: "bold" }}>{item.cidade}</Text>
+        <Text style={{ color: "#888" }}>
+          {new Date(item.dataPesquisa).toLocaleString("pt-BR", {
+            day: "2-digit", month: "2-digit", year: "numeric",
+            hour: "2-digit", minute: "2-digit"
+          })}
+        </Text>
+      </View>
+      <TouchableOpacity onPress={() => toggleFavorite(item)}>
+        <Animated.View style={[styles.heartButton, { transform: [{ scale: scaleAnim }] }]}>
+          <FontAwesome
+            name="heart"
+            size={20}
+            color={isFavorite(item.cidade) ? "#e53935" : "#ccc"}  // Verifica se é favorito
+          />
+        </Animated.View>
+      </TouchableOpacity>
+    </View>
+  )}
+/>
+
     </View>
   );
 }

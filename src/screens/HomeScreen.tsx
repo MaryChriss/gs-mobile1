@@ -8,6 +8,7 @@ import { API_URL_BACK } from '@env';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Home() {
   const route = useRoute();
@@ -16,6 +17,7 @@ export default function Home() {
   const [text, setText] = useState("");
   const [placeholder, setPlaceholder] = useState(cidadeParam || "Pesquisar local");
   const [dadosCidade, setDadosCidade] = useState<any | null>(null);
+  const navigation = useNavigation<any>();
   const [region, setRegion] = useState({
     latitude: -8.0476,
     longitude: -34.8770,
@@ -111,7 +113,24 @@ export default function Home() {
       ],
     },
   ];
+  
+  React.useEffect(() => {
+  const verificarUsuario = async () => {
+    const storedData = await AsyncStorage.getItem('userData');
+    if (!storedData) {
+      console.log("Usuário não logado. Redirecionando para Login.");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    }
+  };
 
+  verificarUsuario();
+}, []);
+
+
+  
   const buscarCidade = async () => {
   try {
     const storedData = await AsyncStorage.getItem('userData');

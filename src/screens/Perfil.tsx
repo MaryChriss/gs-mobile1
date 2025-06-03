@@ -15,6 +15,8 @@ export default function Perfil() {
   const [password, setPassword] = useState('');
   const [favorites, setFavorites] = useState<{ id: number, cidade: string }[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisibleDelete, setModalVisibleDelete] = useState(false);
+
 
   const navigation = useNavigation<any>();
   const favoritos = "favorites";
@@ -34,15 +36,25 @@ export default function Perfil() {
 
   useFocusEffect(
     useCallback(() => {
-      const loadFavorites = async () => {
-        const favs = await AsyncStorage.getItem(favoritos);
-        if (favs) {
-          const parsedFavs = JSON.parse(favs);
-          setFavorites(parsedFavs);
-        } else {
-          setFavorites([]);
-        }
-      };
+    const loadFavorites = async () => {
+      const userData = await AsyncStorage.getItem("userData");
+      if (!userData) return;
+      const user = JSON.parse(userData);
+
+      try {
+        const response = await axios.get(`${API_URL_BACK}/favoritos/${user.id}`);
+        const favoritosCompletos = response.data.map((fav: any) => ({
+          id: fav.idFavorito,
+          cidade: fav.cidade,
+        }));
+
+        setFavorites(favoritosCompletos);
+
+        await AsyncStorage.setItem("favorites", JSON.stringify(favoritosCompletos.map((f: { cidade: any; }) => f.cidade)));
+      } catch (error) {
+        console.error("Erro ao carregar favoritos do backend:", error);
+      }
+    };
       loadFavorites();
     }, [])
   );
@@ -169,6 +181,37 @@ const renderItem = ({ item }: { item: { id: number; cidade: string } }) => (
         </View>
       </Modal>
       
+      <Modal 
+        animationType="fade"
+        transparent={true}
+        visible={modalVisibleDelete}
+        onRequestClose={() => setModalVisibleDelete(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Deletar Conta</Text>
+            <Text style={styles.modalSubtitle}>Tem certeza que deseja excluir sua conta?</Text>
+            <Text style={styles.modalWarning}>Essa ação não poderá ser desfeita.</Text>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, { backgroundColor: '#e53935' }]} 
+                onPress={deleteUser}
+              >
+                <Text style={styles.modalButtonText}>Deletar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.modalButton, { backgroundColor: '#888' }]} 
+                onPress={() => setModalVisibleDelete(false)}
+              >
+                <Text style={styles.modalButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.profileContainer}>
         <Image
           style={styles.image}
@@ -201,10 +244,11 @@ const renderItem = ({ item }: { item: { id: number; cidade: string } }) => (
           <Text style={styles.menuText}>Editar Perfil</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem} onPress={deleteUser}>
-          <Feather  name="trash-2" size={20} color="#da0707" style={styles.menuIcon} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => setModalVisibleDelete(true)}>
+          <Feather name="trash-2" size={20} color="#da0707" style={styles.menuIcon} />
           <Text style={styles.menuText}>Deletar Conta</Text>
         </TouchableOpacity>
+
       </View>
 
     </View>
@@ -329,6 +373,32 @@ menuText: {
     backgroundColor: "#f2f2f2",
     marginRight: 5,
   },
+modalWarning: {
+  fontSize: 14,
+  color: "#c62828",
+  marginBottom: 20,
+  textAlign: "center",
+},
+
+modalButtons: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  width: "100%",
+  gap: 12,
+},
+
+modalButton: {
+  flex: 1,
+  paddingVertical: 12,
+  borderRadius: 8,
+  alignItems: "center",
+},
+
+modalButtonText: {
+  color: "#fff",
+  fontWeight: "600",
+  fontSize: 14,
+},
 cleanCard: {
   backgroundColor: "#fff",
   borderRadius: 12,
