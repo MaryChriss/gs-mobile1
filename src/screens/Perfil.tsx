@@ -12,7 +12,6 @@ import Header from "../../components/header/header";
 import { useCallback, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { Modal, TextInput } from "react-native";
 import axios from 'axios';
 import { API_URL_BACK } from '@env';
 import { FontAwesome } from "@expo/vector-icons";
@@ -24,7 +23,7 @@ export default function Perfil() {
   const [name, setName] = useState("");
   const [password, setPassword] = useState('');
   const [favorites, setFavorites] = useState<any[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const navigation = useNavigation<any>();
   const favoritos = "favorites";
@@ -312,32 +311,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-end",
   },
-modalOverlay: {
-  flex: 1,
-  justifyContent: 'center',
-  alignItems: 'center',
-  backgroundColor: 'rgba(0,0,0,0.5)',
-},
-modalContainer: {
-  backgroundColor: '#fff',
-  padding: 20,
-  borderRadius: 10,
-  width: '80%',
-  elevation: 5,
-},
-modalTitle: {
-  fontSize: 18,
-  fontWeight: 'bold',
-  marginBottom: 15,
-},
-input: {
-  borderWidth: 1,
-  borderColor: '#ccc',
-  borderRadius: 8,
-  padding: 10,
-  marginBottom: 10,
-  fontSize: 16,
-},
   card: {
     backgroundColor: "#f8f8f8",
     padding: 10,

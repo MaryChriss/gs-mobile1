@@ -144,7 +144,6 @@ const buscarCidade = async () => {
   const dados = response.data.content[0];
   setDadosCidade(dados);
 
-  // Atualiza o mapa com a nova cidade
 if (dados.latApi && dados.lonApi) {
   console.log("Atualizando região para:", dados.latApi, dados.lonApi);
   setRegion({
@@ -262,7 +261,7 @@ searchRow: {
   backgroundColor: '#ABD5FF',
   paddingHorizontal: 16,
   paddingVertical: 10,
-  gap: 10, // opcional se quiser espaçamento entre input e botão
+  gap: 10,
 },
 mensagemNaoEncontrado: {
   textAlign: 'center',
