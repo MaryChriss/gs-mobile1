@@ -4,15 +4,11 @@ Plataforma de monitoramento climático inteligente com integração via API, int
 
 ## 📋 Descrição da Solução
 
-O **ClimaESP** é uma aplicação mobile desenvolvida com foco em oferecer ao usuário uma experiência completa de consulta climática, permitindo:
+O ClimaESP é uma solução tecnológica que permite o monitoramento e a consulta de dados climáticos como temperatura, umidade, chuva, vento etc.., com base nas cidades pesquisadas pelos usuários.
 
-- Buscar dados atualizados de clima por cidade
-- Visualizar as condições meteorológicas em um mapa interativo
-- Favoritar cidades para consulta rápida
-- Gerenciar perfil pessoal (nome, e-mail e senha)
-- Acompanhar histórico de buscas, com data e horário
+Utilizando dispositivos IoT para coleta em tempo real, os dados são armazenados em um banco de dados e apresentados de forma acessível, contribuindo para a conscientização ambiental, planejamento de atividades e prevenção de riscos climáticos como enchentes ou ondas de calor.
 
-O sistema utiliza a API OpenWeatherMap para coleta dos dados via IOT e mantém uma arquitetura robusta com integração ao backend Java + Spring Boot. As informações são persistidas em banco relacional e refletidas dinamicamente na interface.
+Cada cidade pesquisada é registrada em um histórico e pode ser favoritada, facilitando o acompanhamento contínuo por parte de agricultores, moradores e gestores públicos. O ClimaESP combina tecnologia e boas práticas para ajudar pessoas, proteger o meio ambiente e antecipar problemas causados por mudanças climáticas.
 
 ## 🚀 Tecnologias Utilizadas
 
