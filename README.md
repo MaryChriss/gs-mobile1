@@ -83,7 +83,6 @@ npx expo start -c
 - O app possui controle de sessão: se o usuário não estiver autenticado, será redirecionado para o login.
 
 - As cidades disponiveis no banco de dados para pesquisa no momento são:
-Cidades com dados climáticos disponíveis:
 São Paulo
 Curitiba
 Porto Alegre
